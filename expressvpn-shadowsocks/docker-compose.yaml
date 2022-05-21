@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  socks-proxy:
+    build: ./
+    image: wangyingang/expressvpn-shadowsocks:${TAG:-latest}
+    cap_add:
+      - net_admin
+      - sys_admin
+    environment:
+      - VPN_LOCATION=jpyo
+      - SS_METHOD=chacha20-ietf-poly1305
+      - SS_PASSWORD=password
+    restart: always
+    volumes:
+      - /dev/net:/dev/net:z
+      - expressvpn:/var/lib/expressvpn
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv4.conf.all.rp_filter=2
+    ports:
+      # - "8388:8388/tcp"
+      # - "8388:8388/udp"
+      - "127.0.0.1:1080:1080/tcp"
+      - "127.0.0.1:1080:1080/udp"
+    healthcheck:
+      test: ["CMD", "curl", "-x", "socks5h://127.0.0.1:1080", "https://www.google.com"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 180s
+
+volumes:
+  expressvpn:
+    name: "expressvpn"
